@@ -1,5 +1,5 @@
 # fitness-tracker
-CS3237 Group 12 (AY 2021/22 Semester 1)
+IOT Project
 
 ```Data``` contains all data collected. (csv files etc)
 
