@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<!--
+	Demonstration of the TI SensorTag JavaScript library.
+-->
+<html>
+
+<head>
+	<meta charset="utf-8" />
+	<meta name="format-detection" content="telephone=no" />
+	<meta name="viewport" content="width=device-width, user-scalable=no,
+		shrink-to-fit=no, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0" />
+
+	<title>TI SensorTag CC2650 &amp; CC2541 Sensors</title>
+
+	<style>
+		@import 'ui/css/evothings-app.css';
+		@import 'ui/css/app_snackbar.css';
+	</style>
+
+	<script>
+	// Redirect console.log to Evothings Workbench.
+	if (window.hyper && window.hyper.log) { console.log = hyper.log }
+	</script>
+
+	<script src="cordova.js"></script>
+	<script src="libs/evothings/evothings.js"></script>
+	<script src="libs/evothings/ui/ui.js"></script>
+	<script src="libs/evothings/tisensortag/tisensortag.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/paho-mqtt/1.0.1/mqttws31.js" type="text/javascript"></script>
+	<script type="text/javascript" src="timer.js"></script>
+	<script type="text/javascript" src="mqtt_client.js"></script>
+	<script type="text/javascript" src="graphing.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.4/Chart.js"></script>
+</head>
+
+<body>
+
+	<header>
+		<button class="back" onclick="history.back()">
+			<img src="ui/images/arrow-left.svg" />
+		</button>
+		<img class="logotype" src="ui/images/logo.svg" alt="Evothings" />
+		<!--<button class="menu" onclick=""><img src="ui/images/menu.svg" /></button>-->
+	</header>
+
+	<h1>Your analytics</h1>
+
+
+	<!--<button onclick ="getData()", type='button'>submit</button> -->
+
+	<canvas id="benchPressChart" style="width:100%;"></canvas>
+	<canvas id="squatChart" style="width:100%;"></canvas>
+	<canvas id="deadliftChart" style="width:100%;"></canvas>
+
+</body>
+
+</html>
+
+<script>
+var exerciseData = 
+'{"date":"18/10/2021, 10:10:03 PM","benchPress":{"0":["50","5"],"1":["50","5"],"2":["50","5"]},"squat":{"0":["50","5"],"1":["50","5"],"2":["50","5"]},"deadlift":{"0":["50","5"],"1":["50","5"],"2":["50","2"]}}' + '\n' + 
+'{"date":"19/10/2021, 10:10:03 PM","benchPress":{"0":["60","5"],"1":["60","5"],"2":["60","5"]},"squat":{"0":["60","5"],"1":["60","5"],"2":["60","5"]},"deadlift":{"0":["60","5"],"1":["60","5"],"2":["60","2"]}}' + '\n' + 
+'{"date":"20/10/2021, 10:10:03 PM","benchPress":{"0":["70","5"],"1":["70","5"],"2":["70","5"]},"squat":{"0":["70","5"],"1":["70","5"],"2":["70","5"]},"deadlift":{"0":["70","5"],"1":["70","5"],"2":["70","2"]}}' + '\n' + 
+'{"date":"21/10/2021, 10:10:03 PM","benchPress":{},"squat":{"0":["80","5"],"1":["80","5"],"2":["80","5"]},"deadlift":{"0":["80","5"],"1":["80","5"],"2":["80","2"]}}' + '\n' + 
+'{"date":"22/10/2021, 10:10:03 PM","benchPress":{"0":["90","5"],"1":["90","5"],"2":["90","5"]},"squat":{"0":["90","5"],"1":["90","5"],"2":["90","5"]},"deadlift":{"0":["90","5"],"1":["90","5"],"2":["90","2"]}}' + '\n' + 
+'{"date":"23/10/2021, 10:10:03 PM","benchPress":{"0":["100","5"],"1":["100","5"],"2":["100","5"]},"squat":{"0":["100","5"],"1":["100","5"],"2":["100","5"]},"deadlift":{"0":["100","5"],"1":["100","5"],"2":["100","2"]}}' + '\n' + 
+'{"date":"24/10/2021, 10:10:03 PM","benchPress":{"0":["110","5"],"1":["110","5"],"2":["110","5"]},"squat":{"0":["110","5"],"1":["110","5"],"2":["110","5"]},"deadlift":{"0":["110","5"],"1":["110","5"],"2":["110","2"]}}' + '\n' + 
+'{"date":"25/10/2021, 10:10:03 PM","benchPress":{"0":["120","5"],"1":["120","5"],"2":["120","5"]},"squat":{"0":["120","5"],"1":["120","5"],"2":["120","5"]},"deadlift":{"0":["120","5"],"1":["120","5"],"2":["120","2"]}}'
+
+var maxWeight = 
+{
+	"benchPress": [100, 2],
+	"squats": [120, 2],
+	"deadLift": [150, 3]
+}
+
+var maxVolume =
+{
+	"benchPress": [80, 5],
+	"squats": [100, 5],
+	"deadLift": [120, 5]
+}
+
+var xValuesBenchPress = []
+var yValuesBenchPress = []
+var xValuesSquat = []
+var yValuesSquat = []
+var xValuesDeadlift = []
+var yValuesDeadlift = []
+//function getData(){
+
+	var totalWeight = 0
+	var totalReps = 0
+	var exerciseList = exerciseData.split("\n")
+	for (var i=0; i < exerciseList.length; i++)
+	{
+		var data = JSON.parse(exerciseList[i])
+		ddmmSplit = data["date"].split("/")
+		dateStr = ddmmSplit[1] +"/" + ddmmSplit[0] + "/" + ddmmSplit[2]
+		dateobj = new Date(dateStr)
+		dateStr = dateobj.getDate().toString() + "/" + dateobj.getMonth().toString()
+		
+		var bench = data["benchPress"]
+		if (Object.keys(bench).length !== 0)
+		{
+			newLen = xValuesBenchPress.length
+			xValuesBenchPress[newLen] = dateStr
+			for(const set in bench){
+				setRep = bench[set]
+				totalWeight = totalWeight + ( parseInt(setRep[0]) * parseInt(setRep[1]))
+				totalReps = totalReps + parseInt(setRep[1])
+			}
+			yValuesBenchPress[newLen] = totalWeight / totalReps
+			totalWeight = 0
+			totalReps = 0
+
+		}
+
+		var squat = data["squat"]
+		if (Object.keys(squat).length !== 0)
+		{
+			newLen = xValuesSquat.length
+			xValuesSquat[newLen] = dateStr
+			for(const set in squat){
+				setRep = squat[set]
+				totalWeight = totalWeight + ( parseInt(setRep[0]) * parseInt(setRep[1]))
+				totalReps = totalReps + parseInt(setRep[1])
+			}
+			yValuesSquat[newLen] = totalWeight / totalReps
+			totalWeight = 0
+			totalReps = 0
+
+		}
+
+		var deadlift = data["deadlift"]
+		if (Object.keys(deadlift).length !== 0)
+		{
+			newLen = xValuesDeadlift.length
+			xValuesDeadlift[newLen] = dateStr
+			for(const set in deadlift){
+				setRep = deadlift[set]
+				totalWeight = totalWeight + ( parseInt(setRep[0]) * parseInt(setRep[1]))
+				totalReps = totalReps + parseInt(setRep[1])
+			}
+			yValuesDeadlift[newLen] = totalWeight / totalReps
+			totalWeight = 0
+			totalReps = 0
+
+		}
+	}
+	console.log(xValuesBenchPress.toString())
+	console.log(yValuesBenchPress.toString())
+
+	console.log(xValuesSquat.toString())
+	console.log(yValuesSquat.toString())
+
+	console.log(xValuesDeadlift.toString())
+	console.log(yValuesDeadlift.toString())
+	//showGraph()
+//}
+
+//function showGraph(){
+
+	new Chart("benchPressChart", {
+	type: "line",
+	data: {
+		labels: xValuesBenchPress,
+		datasets: [{
+		fill: false,
+		lineTension: 0,
+		backgroundColor: "rgba(0,0,255,1.0)",
+		borderColor: "rgba(0,0,255,0.1)",
+		data: yValuesBenchPress
+		}]
+	},
+	options: {
+		title: {display: true, text: "Bench Press"},
+		legend: {display: false},
+		
+	}
+	});
+
+	new Chart("squatChart", {
+	type: "line",
+	data: {
+		labels: xValuesSquat,
+		datasets: [{
+		fill: false,
+		lineTension: 0,
+		backgroundColor: "rgba(0,0,255,1.0)",
+		borderColor: "rgba(0,0,255,0.1)",
+		data: yValuesSquat
+		}]
+	},
+	options: {
+		title: {display: true, text: "Squats"},
+		legend: {display: false},
+		
+	}
+	});
+
+
+	new Chart("deadliftChart", {
+	type: "line",
+	data: {
+		labels: xValuesDeadlift,
+		datasets: [{
+		fill: false,
+		lineTension: 0,
+		backgroundColor: "rgba(0,0,255,1.0)",
+		borderColor: "rgba(0,0,255,0.1)",
+		data: yValuesDeadlift
+		}]
+	},
+	options: {
+		title: {display: true, text: "Deadlifts"},
+		legend: {display: false},
+		
+	}
+	});
+//}
+
+</script>
