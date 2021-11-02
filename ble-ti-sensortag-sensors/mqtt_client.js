@@ -1,24 +1,60 @@
 //------------------MQTT---------------
-
 var mqtt;
 var host = "j7TPsoTxU5fLSBsnZqIZXA.mywire.org"//"broker.hivemq.com"//
 var port = 9001
 var benchpressCtr = [0,0]
 var squatCtr = [0,0]
 var deadliftCtr = [0,0]
+var userIdGlobal = ""
+var counterchecker = 1
+var exerciseDataMQTT = null;
+
+function subscribeToUserQueryReplies(userId)
+{   
+    console.log("subscribing to " + userId)
+    mqtt.subscribe("cs3237/response/" + userId);
+}
+
+function getExerciseData(){
+    return exerciseData
+}
+
 
 function onConnect() 
 {
     console.log("Connected");
+    if (userIdGlobal !== ""){
+        subscribeToUserQueryReplies(userIdGlobal)
+    }
     mqtt.subscribe("exerciseData")
     message = new Paho.MQTT.Message("Hello world");
     message.destinationName = "lanjiao";
     mqtt.send(message);
     console.log("sent");
+    if (userIdGlobal !== ""){
+        sendQueryForExerciseData()
+    }
 }
 
 function onMessageArrived(msg)
 {
+    
+    if(msg.destinationName == "cs3237/response/"+userIdGlobal) {
+        console.log(counterchecker + "===" +msg.payloadString)
+        exerciseData = msg.payloadString
+        try{
+            setHistoryList(exerciseData)
+        } catch(err){
+            console.log(err)
+        }
+        try{
+            setCharts(exerciseData)
+        } catch(err){
+            console.log(err)
+        }
+    }
+
+
     outMessage = msg.payloadString;
     console.log(outMessage)
     if (outMessage == "Bench press") 
@@ -45,8 +81,11 @@ function onMessageArrived(msg)
     }    //addItem("dynamic_benchpress", outMessage, 0)
 }
 
-function MQTTconnect()
+function MQTTconnect(userId)
 {
+    if(typeof userId !=='undefined'){
+        userIdGlobal = userId
+    }
     console.log("hello beech")
     console.log("connecting to "+ host + " "+ port);
     mqtt = new Paho.MQTT.Client(host, port, "clientjs")
@@ -56,6 +95,9 @@ function MQTTconnect()
     console.log("still trying")
 }
 
+
+
+//sends the sensor data over to the sever to be processed by ML model
 function sendSensorData(sensorData)
 {
     message = new Paho.MQTT.Message(sensorData);
@@ -63,6 +105,26 @@ function sendSensorData(sensorData)
     mqtt.send(message);
 }
 
+
+//Sends the exercise information to the database 
+//exercise data should be a json string with a key = user_id
+function sendExerciseDataToDB(exerciseData)
+{
+    message = new Paho.MQTT.Message(exerciseData);
+    message.destinationName = "cs3237/store"
+    mqtt.send(message)
+}
+
+function sendQueryForExerciseData()
+{
+    console.log("useridGlobal is "+ userIdGlobal)
+    var queryJsonString = JSON.stringify({"user_id": userIdGlobal})
+    console.log(queryJsonString)
+    message = new Paho.MQTT.Message(queryJsonString);
+    message.destinationName = "cs3237/query"
+    mqtt.send(message)
+    console.log("sent query")
+}
 
 function updateExerciseRep(listId, exerciseCtr)
 {   
@@ -135,6 +197,8 @@ function updateDatabase(){
     var benchPress = {}
     var squat = {}
     var deadlift = {}
+
+    var userId = document.getElementById("welcomeUser").value
     const benchPressList = document.getElementById("dynamic_benchpress").getElementsByTagName('li')
     const squatList = document.getElementById("dynamic_squat").getElementsByTagName('li')
     const deadliftList = document.getElementById("dynamic_deadlift").getElementsByTagName('li')
@@ -153,7 +217,7 @@ function updateDatabase(){
         deadlift[i] = [inputs[0].value, inputs[1].value]
     }
     
-
+    dbData["user_id"] = userId
     dbData["date"] = date
     dbData["benchPress"] = benchPress
     dbData["squat"] = squat
@@ -161,6 +225,7 @@ function updateDatabase(){
 
     var obj = JSON.stringify(dbData)
     console.log(obj)
+    return obj
 
     
 }

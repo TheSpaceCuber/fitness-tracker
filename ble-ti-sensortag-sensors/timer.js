@@ -35,6 +35,7 @@ minOut = checkTime(min);
 hourOut = checkTime(hour);
 
 milisec = ++milisec;
+// sec = ++sec;
 
 if (milisec === 100) {
     milisec = 0;
@@ -52,7 +53,7 @@ if (min == 60) {
 
 }
 
-document.getElementById("milisec").innerHTML = miliSecOut;
+// document.getElementById("milisec").innerHTML = miliSecOut;
 document.getElementById("sec").innerHTML = secOut;
 document.getElementById("min").innerHTML = minOut;
 document.getElementById("hour").innerHTML = hourOut;
@@ -80,9 +81,10 @@ sec = 0;
 min = 0
 hour = 0;
 
-document.getElementById("milisec").innerHTML = "00";
+// document.getElementById("milisec").innerHTML = "00";
 document.getElementById("sec").innerHTML = "00";
 document.getElementById("min").innerHTML = "00";
 document.getElementById("hour").innerHTML = "00";
+stop();
 
 }
