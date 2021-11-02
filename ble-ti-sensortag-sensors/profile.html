@@ -18,6 +18,7 @@
 	</style>
 
 	<script>
+
 	// Redirect console.log to Evothings Workbench.
 	if (window.hyper && window.hyper.log) { console.log = hyper.log }
 	</script>
@@ -29,8 +30,18 @@
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/paho-mqtt/1.0.1/mqttws31.js" type="text/javascript"></script>
 	<script type="text/javascript" src="timer.js"></script>
 	<script type="text/javascript" src="mqtt_client.js"></script>
-	<script type="text/javascript" src="graphing.js"></script>
+	<!-- jQuery library -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+    <!-- Bootstrap library -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.4/Chart.js"></script>
+	<script>
+        const params = new URLSearchParams(window.location.search)
+		var user = params.get('userId')
+        console.log("window parameters are "+ user)
+        MQTTconnect(user);
+    </script>
 </head>
 
 <body>
@@ -52,49 +63,27 @@
 	<canvas id="squatChart" style="width:100%;"></canvas>
 	<canvas id="deadliftChart" style="width:100%;"></canvas>
 
-</body>
-
-</html>
 
 <script>
-var exerciseData = 
-'{"date":"18/10/2021, 10:10:03 PM","benchPress":{"0":["50","5"],"1":["50","5"],"2":["50","5"]},"squat":{"0":["50","5"],"1":["50","5"],"2":["50","5"]},"deadlift":{"0":["50","5"],"1":["50","5"],"2":["50","2"]}}' + '\n' + 
-'{"date":"19/10/2021, 10:10:03 PM","benchPress":{"0":["60","5"],"1":["60","5"],"2":["60","5"]},"squat":{"0":["60","5"],"1":["60","5"],"2":["60","5"]},"deadlift":{"0":["60","5"],"1":["60","5"],"2":["60","2"]}}' + '\n' + 
-'{"date":"20/10/2021, 10:10:03 PM","benchPress":{"0":["70","5"],"1":["70","5"],"2":["70","5"]},"squat":{"0":["70","5"],"1":["70","5"],"2":["70","5"]},"deadlift":{"0":["70","5"],"1":["70","5"],"2":["70","2"]}}' + '\n' + 
-'{"date":"21/10/2021, 10:10:03 PM","benchPress":{},"squat":{"0":["80","5"],"1":["80","5"],"2":["80","5"]},"deadlift":{"0":["80","5"],"1":["80","5"],"2":["80","2"]}}' + '\n' + 
-'{"date":"22/10/2021, 10:10:03 PM","benchPress":{"0":["90","5"],"1":["90","5"],"2":["90","5"]},"squat":{"0":["90","5"],"1":["90","5"],"2":["90","5"]},"deadlift":{"0":["90","5"],"1":["90","5"],"2":["90","2"]}}' + '\n' + 
-'{"date":"23/10/2021, 10:10:03 PM","benchPress":{"0":["100","5"],"1":["100","5"],"2":["100","5"]},"squat":{"0":["100","5"],"1":["100","5"],"2":["100","5"]},"deadlift":{"0":["100","5"],"1":["100","5"],"2":["100","2"]}}' + '\n' + 
-'{"date":"24/10/2021, 10:10:03 PM","benchPress":{"0":["110","5"],"1":["110","5"],"2":["110","5"]},"squat":{"0":["110","5"],"1":["110","5"],"2":["110","5"]},"deadlift":{"0":["110","5"],"1":["110","5"],"2":["110","2"]}}' + '\n' + 
-'{"date":"25/10/2021, 10:10:03 PM","benchPress":{"0":["120","5"],"1":["120","5"],"2":["120","5"]},"squat":{"0":["120","5"],"1":["120","5"],"2":["120","5"]},"deadlift":{"0":["120","5"],"1":["120","5"],"2":["120","2"]}}'
 
-var maxWeight = 
-{
-	"benchPress": [100, 2],
-	"squats": [120, 2],
-	"deadLift": [150, 3]
-}
 
-var maxVolume =
-{
-	"benchPress": [80, 5],
-	"squats": [100, 5],
-	"deadLift": [120, 5]
-}
 
-var xValuesBenchPress = []
-var yValuesBenchPress = []
-var xValuesSquat = []
-var yValuesSquat = []
-var xValuesDeadlift = []
-var yValuesDeadlift = []
-//function getData(){
+function setCharts(exerciseDataJsonString){
+	console.log("setting charts")
+	console.log(exerciseDataJsonString)
+	exerciseList = JSON.parse(exerciseDataJsonString)
 
+	var xValuesBenchPress = []
+	var yValuesBenchPress = []
+	var xValuesSquat = []
+	var yValuesSquat = []
+	var xValuesDeadlift = []
+	var yValuesDeadlift = []
 	var totalWeight = 0
 	var totalReps = 0
-	var exerciseList = exerciseData.split("\n")
 	for (var i=0; i < exerciseList.length; i++)
 	{
-		var data = JSON.parse(exerciseList[i])
+		var data = exerciseList[i]
 		ddmmSplit = data["date"].split("/")
 		dateStr = ddmmSplit[1] +"/" + ddmmSplit[0] + "/" + ddmmSplit[2]
 		dateobj = new Date(dateStr)
@@ -156,10 +145,7 @@ var yValuesDeadlift = []
 
 	console.log(xValuesDeadlift.toString())
 	console.log(yValuesDeadlift.toString())
-	//showGraph()
-//}
 
-//function showGraph(){
 
 	new Chart("benchPressChart", {
 	type: "line",
@@ -218,6 +204,11 @@ var yValuesDeadlift = []
 		
 	}
 	});
-//}
+}
 
-</script>
+
+	</script>
+
+</body>
+
+</html>

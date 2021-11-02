@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<!--
+	Demonstration of the TI SensorTag JavaScript library.
+-->
+<html>
+
+<head>
+	<meta charset="utf-8" />
+	<meta name="format-detection" content="telephone=no" />
+	<meta name="viewport" content="width=device-width, user-scalable=no,
+		shrink-to-fit=no, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0" />
+
+	<title>TI SensorTag CC2650 &amp; CC2541 Sensors</title>
+
+	<style>
+		@import 'ui/css/evothings-app.css';
+		@import 'ui/css/app_snackbar.css';
+	</style>
+
+	<script>
+
+	// Redirect console.log to Evothings Workbench.
+	if (window.hyper && window.hyper.log) { console.log = hyper.log }
+	</script>
+
+	<script src="cordova.js"></script>
+	<script src="libs/evothings/evothings.js"></script>
+	<script src="libs/evothings/ui/ui.js"></script>
+	<script src="libs/evothings/tisensortag/tisensortag.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/paho-mqtt/1.0.1/mqttws31.js" type="text/javascript"></script>
+	<script type="text/javascript" src="timer.js"></script>
+	<script type="text/javascript" src="mqtt_client.js"></script>
+	<!-- jQuery library -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+    <!-- Bootstrap library -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
+    <script>
+        const params = new URLSearchParams(window.location.search)
+		var user = params.get('userId')
+        console.log("window parameters are "+ user)
+        MQTTconnect(user);
+    </script>
+</head>
+
+<body>
+
+	<header>
+		<button class="back" onclick="history.back()">
+			<img src="ui/images/arrow-left.svg" />
+		</button>
+		<img class="logotype" src="ui/images/logo.svg" alt="Evothings" />
+		<!--<button class="menu" onclick=""><img src="ui/images/menu.svg" /></button>-->
+	</header>
+
+	<h1>Your exercise history</h1>
+
+
+	<!--<button onclick ="getData()", type='button'>submit</button> -->
+
+	<ul id = "historyList">
+
+    </ul>
+
+
+<script>
+
+
+function isEmpty(obj) {
+    for(var key in obj) {
+        if(obj.hasOwnProperty(key))
+            return false;
+    }
+    return true;
+}
+
+function parser(exerciseData){
+    var dateString = "date: " + exerciseData["date"] + "<br>";;
+    var benchPressString = "";
+    var squatString = "";
+    var deadliftString = "";
+
+    var benchPressDict = exerciseData["benchPress"] 
+    if(!isEmpty(benchPressDict)){
+        var benchPressString = "Bench Press: <br>"+ "&emsp;";
+        const keys = Object.keys(benchPressDict);
+            
+        keys.forEach((key, index) => {
+            var set = parseInt(key) + 1
+            var weight = benchPressDict[key][0]
+            var reps = benchPressDict[key][1]
+            benchPressString = benchPressString +  `${set}: ${weight}kg x ${reps}` + "<br> &emsp;"
+        });
+    }
+    
+    var squatDict = exerciseData["squat"] 
+    if(!isEmpty(squatDict)){
+        var squatString = "<br>Squats: <br>"+ "&emsp;";
+        const keys = Object.keys(squatDict);
+
+        keys.forEach((key, index) => {
+            var set = parseInt(key) + 1
+            var weight = squatDict[key][0]
+            var reps = squatDict[key][1]
+            squatString = squatString +  `${set}: ${weight}kg x ${reps}` + "<br> &emsp;"
+        });
+    }
+    
+    var deadliftDict = exerciseData["deadlift"] 
+    if(!isEmpty(deadliftDict)){
+        var deadliftString = "<br>Deadlift: <br>"+ "&emsp;";
+        const keys = Object.keys(deadliftDict);
+
+        keys.forEach((key, index) => {
+            var set = parseInt(key) + 1
+            var weight = deadliftDict[key][0]
+            var reps = deadliftDict[key][1]
+            deadliftString = deadliftString +  `${set}: ${weight}kg x ${reps}` + "<br> &emsp;"
+        });
+    }
+
+    return dateString + benchPressString + squatString + deadliftString;
+}
+
+
+function setHistoryList(exerciseDataJsonString)
+{    
+    exerciseData = JSON.parse(exerciseDataJsonString)
+    for(let i=0; i<exerciseData.length; i++){
+        
+        var dateSpaced = exerciseData[i]["date"];
+        var date = dateSpaced.replace(/\s/g, '');
+        
+        var modalFade = document.createElement("div");
+        modalFade.setAttribute("id", "modalFade"+i)
+        modalFade.role = "dialog";
+        modalFade.className = "modal fade";
+        
+        var modalDialog = document.createElement("div");
+        modalDialog.className = "modal-dialog";
+        
+        var modalContent = document.createElement("div");
+        modalContent.className = "modal-content";
+        
+        var modalHeader = document.createElement("div");
+        modalHeader.className = "modal-header";
+        
+        var closeSpan = document.createElement("span");
+        closeSpan.className = "close";
+        closeSpan.innerHTML = "&times;"
+        closeSpan.setAttribute("data-dismiss","modal")
+        
+        var modalTitle = document.createElement("h4");
+        modalTitle.class = "modal-title";
+        modalTitle.innerHTML = date;
+        
+        var modalBody = document.createElement("p");
+        modalBody.innerHTML = parser(exerciseData[i]);
+        modalBody.className = "modal-body"
+        modalBody.style.fontSize = "x-large";
+        
+        var button = document.createElement("button");
+        button.type = "button";
+        button.className = "btn btn-success openBtn";
+        button.setAttribute("id", "modalButton"+i)
+        button.innerHTML = date;
+        button.value = date;
+
+        var modalFooter = document.createElement("div");
+        modalFooter.className = "modal-footer";
+        
+        var listItem = document.createElement("li");
+        var list = document.getElementById("historyList");
+    
+        modalHeader.appendChild(modalTitle);
+        modalHeader.appendChild(closeSpan);
+        modalContent.appendChild(modalHeader);
+        modalContent.appendChild(modalBody);
+        modalContent.appendChild(modalFooter);
+        modalDialog.appendChild(modalContent);
+        modalFade.appendChild(modalDialog);
+        listItem.appendChild(button);
+        listItem.appendChild(modalFade);
+        list.appendChild(listItem);
+        
+        $("#modalButton"+i).click(function(){
+                    $("#modalFade"+i).modal('show');
+                });
+    }
+}
+
+	</script>
+
+</body>
+
+</html>
