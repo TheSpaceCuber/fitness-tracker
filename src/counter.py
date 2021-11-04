@@ -28,7 +28,7 @@ def detect_peaks(values: list, step: int=2, min_diff: float=0.001) -> list:
             (prev - prev_prev > min_diff) and (after - after_after > min_diff) and # extra check
             curr > mean(values)): # check if local maxima detected is above average
             peaks_test.append(i)
-            i = i + step # TODO set to 20? or leave at step
+            i = i + 10 # TODO what is a
             continue
         i = i + 1 # check next point if no maxima detected
     return np.array(peaks_test)
@@ -46,5 +46,5 @@ def get_count(accelZ_arr: list) -> int:
     else: # smoothing with standard window
         smoothed_values = savgol_filter(accelZ_arr, window_length=21, polyorder=2) # change this to smooth curve!
     # calculate peaks
-    peaks = detect_peaks(smoothed_values, step=1, min_diff=0.001) # change this adjust peak detection!
+    peaks = detect_peaks(smoothed_values, step=5, min_diff=0.001) # change this adjust peak detection!
     return len(peaks)
