@@ -1,7 +1,7 @@
 # fitness-tracker
 IOT Project
 ## Architecture
-![Architecture](architecture.png)
+![Architecture](img/architecture.png)
 
 ```Data``` contains all data collected. (csv files etc)
 
