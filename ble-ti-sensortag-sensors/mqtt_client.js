@@ -9,11 +9,30 @@ var userIdGlobal = ""
 var counterchecker = 1
 var exerciseDataMQTT = null;
 
+var takenBenchPressPrevCounter = 0;
+var benchPressPrevCounter =0;
+var benchPressNextCounter =0;
+var benchPressCounter =0;
+
+var takenBicepCurlPrevCounter = 0;
+var bicepCurlPrevCounter =0;
+var bicepCurlNextCounter=0;
+var bicepCurlCounter=0;
+
+var sessionID = Math.floor(Math.random() * 100);
+
+var listCOunter =0;
+
 function subscribeToUserQueryReplies(userId)
 {   
     console.log("subscribing to " + userId)
     mqtt.subscribe("cs3237/response/" + userId);
 }
+
+// function subscribeToPredictioin(sessionID){
+//     console.log("subscribing to " + userId)
+//     mqtt.subscribe("cs3237/prediction/sessionI" + userId);
+// }
 
 function getExerciseData(){
     return exerciseData
@@ -26,6 +45,9 @@ function onConnect()
     if (userIdGlobal !== ""){
         subscribeToUserQueryReplies(userIdGlobal)
     }
+    mqtt.subscribe("cs3237/prediction/"+sessionID.toString())
+    console.log("prediction session id is " + sessionID.toString())
+
     mqtt.subscribe("exerciseData")
     message = new Paho.MQTT.Message("Hello world");
     message.destinationName = "lanjiao";
@@ -35,6 +57,12 @@ function onConnect()
         sendQueryForExerciseData()
     }
 }
+
+function onConnectionLost(responseObject) {
+    if (responseObject.errorCode !== 0) {
+        console.log("onConnectionLost:" + responseObject.errorMessage);
+    }
+    }
 
 function onMessageArrived(msg)
 {
@@ -53,32 +81,67 @@ function onMessageArrived(msg)
             console.log(err)
         }
     }
+    // inMessage = msg.payloadString;
+    // console.log(inMessage)
+    if(msg.destinationName == "cs3237/prediction/" + sessionID.toString()) {
+        listCounter = listCOunter +1;
+    // else {
+        inMessage = msg.payloadString;
+        exerciseObj = JSON.parse(inMessage)
+        exercise = exerciseObj["exercise"]
+        count = exerciseObj["count"]
+
+        if (exercise == "bench_press"){
+            if(takenBenchPressPrevCounter==0) {
+                benchPressPrevCounter = count;
+                takenBenchPressPrevCounter=1;
+            }
+            benchPressNextCounter = count;
+            if (benchPressNextCounter > benchPressPrevCounter) {
+                benchPressCounter = benchPressCounter + 1;
+                addItem("dynamic_benchpress", "Bench press", benchPressCounter)
+                takenBenchPressPrevCounter =0;
+            }
+        }
+        else if (exercise == "bicep_curl") {
+            if(takenBicepCurlPrevCounter ==0) {
+                bicepCurlPrevCounter = count;
+                takenBicepCurlPrevCounter =1;
+            }
+            bicepCurlNextCounter = count;
+            if(bicepCurlNextCounter > bicepCurlPrevCounter) {
+                bicepCurlCounter = bicepCurlCounter +1
+                addItem("dynamic_deadlift", "Deadlift", bicepCurlCounter)
+                takenBicepCurlPrevCounter=0;
+            }
+        }
 
 
-    outMessage = msg.payloadString;
-    console.log(outMessage)
-    if (outMessage == "Bench press") 
-    {
-        benchpressCtr[1] = benchpressCtr[1] + 1
-        
-        addItem("dynamic_benchpress", outMessage, benchpressCtr[1])
+
+        console.log(inMessage)
+        // if (exercise == "bench_press") 
+        // {
+        //     // benchpressCtr[1] = benchpressCtr[1] + 1
+            
+        //     addItem("dynamic_benchpress", "Bench press", benchPressCounter)
+        // }
+        // else if (exercise == "bicep_curl")
+        // {
+        //     // deadliftCtr[1] = deadliftCtr[1] + 1
+        //     addItem("dynamic_deadlift", "Deadlift", bicepCurlCounter)
+        // }
+        // else if (exercise == "Squat")
+        // {
+        //     // squatCtr[1] = squatCtr[1] + 1
+        //     addItem("dynamic_squat", "Squat", count)
+        // }
+        // else if (exercise == "Rest")
+        // {
+        //     deadliftCtr[1] = 0
+        //     benchpressCtr[1] = 0
+        //     squatCtr[1] = 0
+        // }    //addItem("dynamic_benchpress", outMessage, 0)
     }
-    else if (outMessage == "Deadlift")
-    {
-        deadliftCtr[1] = deadliftCtr[1] + 1
-        addItem("dynamic_deadlift", outMessage, deadliftCtr[1])
-    }
-    else if (outMessage == "Squat")
-    {
-        squatCtr[1] = squatCtr[1] + 1
-        addItem("dynamic_squat", outMessage, squatCtr[1])
-    }
-    else if (outMessage == "Rest")
-    {
-        deadliftCtr[1] = 0
-        benchpressCtr[1] = 0
-        squatCtr[1] = 0
-    }    //addItem("dynamic_benchpress", outMessage, 0)
 }
 
 function MQTTconnect(userId)
@@ -91,6 +154,7 @@ function MQTTconnect(userId)
     mqtt = new Paho.MQTT.Client(host, port, "clientjs")
     options = {timeout: 50, onSuccess: onConnect,userName: "bearcub", password: "xBTBOXuWBPIk7rEuHzZ0aw"};
     mqtt.onMessageArrived = onMessageArrived;
+    mqtt.onConnectionLost = onConnectionLost;
     mqtt.connect(options);
     console.log("still trying")
 }
@@ -100,8 +164,12 @@ function MQTTconnect(userId)
 //sends the sensor data over to the sever to be processed by ML model
 function sendSensorData(sensorData)
 {
-    message = new Paho.MQTT.Message(sensorData);
-    message.destinationName = "sensorData"
+    
+    sensorData["session_id"] = sessionID.toString();
+    console.log(sensorData)
+    sensorDataString =JSON.stringify(sensorData)
+    message = new Paho.MQTT.Message(sensorDataString);
+    message.destinationName = "cs3237/predict"
     mqtt.send(message);
 }
 
