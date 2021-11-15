@@ -154,20 +154,27 @@
 	</ul>
 	<br/>
 	
+	<ul id="deadlift">
+		Bicep Curl
+		<ol id="dynamic_deadlift" style="padding-bottom: 0; font-size: 15px;"> </o   l>
+	</ul>
+	<br/>
+	
+
 	<ul id="squat">
 		Squats
 		<ol id="dynamic_squat" style="padding-bottom: 0; font-size: 15px;"> </ol>
 	</ul>
-	<br/>
-	
-	<ul id="deadlift">
-		Deadlift
-		<ol id="dynamic_deadlift" style="padding-bottom: 0; font-size: 15px;"> </o   l>
-	</ul>
+
+
 	<div id="snackbar">hello</div>
 
 
 <script>
+
+	
+
+
 	var connected = false
 	var startstop = 1;
 	var startSend = false
@@ -441,7 +448,7 @@
 		}
 		if (startSend){
 			sensorDataString = JSON.stringify(sensorData)
-			sendSensorData(sensorDataString)
+			sendSensorData(sensorData)
 		}
 
 
