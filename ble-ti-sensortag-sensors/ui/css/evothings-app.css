@@ -10,7 +10,7 @@ html, body {
 	font-family: 'Proxima Nova Regular', sans-serif;
 	font-weight: normal;
 
-	background: rgb(255,255,255);
+	background: rgb(41, 35, 35);
 
 	-webkit-touch-callout: none;
 	-webkit-user-select: none;
@@ -24,6 +24,8 @@ body {
 	margin: 0 0.9em 0 0.9em;
 	font-size: 150%;
 	font-size: 7.5vw;
+	background-color: rgb(41, 35, 35);
+	color: white;
 }
 
 /* Add a top margin to the content corresponding to the height of the header. */
