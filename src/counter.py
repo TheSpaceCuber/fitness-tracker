@@ -71,8 +71,8 @@ def get_speed(accelZ_arr: list, min_normal=17, max_normal=23):
         return NORMAL
 
     if peaks[-1] - peaks[-2] < min_normal:     
-        return SLOW
-    elif peaks[-1] - peaks[-2] > max_normal:
         return FAST
+    elif peaks[-1] - peaks[-2] > max_normal:
+        return SLOW
     else:
         return NORMAL
