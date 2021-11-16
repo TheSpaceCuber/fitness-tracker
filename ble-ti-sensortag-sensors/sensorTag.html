@@ -23,7 +23,7 @@
 		var user = params.get('userId')
 		var welcomeTitle = document.getElementById("welcomeUser")
 		welcomeTitle.value = user
-		welcomeTitle.innerHTML = "Welcome Back, " + user
+		welcomeTitle.innerHTML = "Welcome Back, " + user + "!"
 
 	// Redirect console.log to Evothings Workbench.
 	if (window.hyper && window.hyper.log) { console.log = hyper.log }
@@ -49,13 +49,15 @@
 		<!--<button class="menu" onclick=""><img src="ui/images/menu.svg" /></button>-->
 	</header>
 
-	<h1>TI SensorTag CC2650 &amp; CC2541 Sensors</h1>
-
-	<img src="TISensorTagCC2650.png"
+	<img src="ui/images/fitness.gif"
 		style="float:right;width:120px;height:auto;"/>
 
 	<p>
-		This example works with the <strong>TI SensorTag CC2650</strong>. It also works with the TI SensorTag CC2541 if you modify file index.html. Activate the SensorTag and press Connect to begin.
+		Are you ready to <strong>exercise</strong>?
+	</p>
+
+	<p>
+		Activate the SensorTag and press Connect to begin!
 	</p>
 
 	<p id="upgradeNotice" class="hidden">
@@ -80,47 +82,15 @@
 		<button onclick="toggleSensors()" class="charcoal">Toggle sensors</button>
 	</p>
 
-	<h2>Keypress:</h2>
-	<p>
-		<span id="KeypressData">[Waiting for value]</span>
-	</p>
-
-	<h2>Temperature:</h2>
-	<p>
-		<span id="TemperatureData">[Waiting for value]</span>
-	</p>
-
 	<h2>Accelerometer:</h2>
 	<p>
 		<span id="AccelerometerData">[Waiting for value]</span>
-	</p>
-
-	<h2>Humidity:</h2>
-	<p>
-		<span id="HumidityData">[Waiting for value]</span>
-	</p>
-
-	<h2>Magnetometer:</h2>
-	<p>
-		<span id="MagnetometerData">[Waiting for value]</span>
-	</p>
-
-	<h2>Barometer:</h2>
-	<p>
-		<span id="BarometerData">[Waiting for value]</span>
 	</p>
 
 	<h2>Gyroscope:</h2>
 	<p>
 		<span id="GyroscopeData">[Waiting for value]</span>
 	</p>
-
-	<div id="Luxometer">
-		<h2>Luxometer:</h2>
-		<p>
-			<span id="LuxometerData">[Waiting for value]</span>
-		</p>
-	</div>
 
 	<h2>Device info:</h2>
 	<p>
@@ -172,9 +142,6 @@
 
 <script>
 
-	
-
-
 	var connected = false
 	var startstop = 1;
 	var startSend = false
@@ -203,15 +170,12 @@
 
 	}
 
-
-
 	function stopExerciseAndUpdateDatabase(){
 		reset();
 		sendExerciseDataToDB(updateDatabase())
 		// sendSensorData(updateDatabase())
 		// updateDatabase();		
 	}
-
 
 	function showSnackbar() {
 	// Get the snackbar DIV
@@ -235,7 +199,6 @@
 	// After 3 seconds, remove the show class from DIV
 	setTimeout(function(){ x.className = x.className.replace("show", ""); }, 3000);
 	}
-
 
 	// SensorTag object.
 	var sensortag
