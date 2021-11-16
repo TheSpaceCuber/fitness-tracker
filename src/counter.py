@@ -33,10 +33,9 @@ def detect_peaks(values: list, step: int=2, min_diff: float=0.001) -> list:
         i = i + 1 # check next point if no maxima detected
     return np.array(peaks_test)
 
-def get_count(accelZ_arr: list) -> int:
+def get_peaks(accelZ_arr: list) -> list:
     '''
-    Returns the no of peaks (local maxima) from an array of values.
-    Keep calling this function on live data stream to get the count.
+    Returns an array of peaks
     '''
     length = len(accelZ_arr)
     if length < 5: # too short to perform smoothing, skip
@@ -46,5 +45,34 @@ def get_count(accelZ_arr: list) -> int:
     else: # smoothing with standard window
         smoothed_values = savgol_filter(accelZ_arr, window_length=21, polyorder=2) # change this to smooth curve!
     # calculate peaks
-    peaks = detect_peaks(smoothed_values, step=5, min_diff=0.001) # change this adjust peak detection!
-    return len(peaks)
+    peaks = detect_peaks(smoothed_values, step=1, min_diff=0.001) # change this adjust peak detection!
+    return peaks
+
+def get_count(accelZ_arr: list) -> int:
+    '''
+    Returns the no of peaks (local maxima) from an array of values.
+    Keep calling this function on live data stream to get the count.
+    '''
+    if len(accelZ_arr) < 5:
+        return 0 # too short
+    return len(get_peaks(accelZ_arr))
+
+def get_speed(accelZ_arr: list, min_normal=17, max_normal=23):
+    '''
+    Returns fast or slow or normal depending on the distance between the last two peaks.
+    '''
+    NORMAL = 0
+    FAST = 1
+    SLOW = -1
+    if len(accelZ_arr) < 5:
+        return NORMAL
+    peaks = get_peaks(accelZ_arr)
+    if len(peaks) < 2:
+        return NORMAL
+
+    if peaks[-1] - peaks[-2] < min_normal:     
+        return SLOW
+    elif peaks[-1] - peaks[-2] > max_normal:
+        return FAST
+    else:
+        return NORMAL
