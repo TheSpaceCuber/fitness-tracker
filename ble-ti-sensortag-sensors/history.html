@@ -39,7 +39,7 @@
         const params = new URLSearchParams(window.location.search)
 		var user = params.get('userId')
         console.log("window parameters are "+ user)
-        MQTTconnect(user);
+        sendHttpReqForExerciseData(user);
     </script>
 </head>
 
@@ -123,9 +123,8 @@ function parser(exerciseData){
 }
 
 
-function setHistoryList(exerciseDataJsonString)
+function setHistoryList(exerciseData)
 {    
-    exerciseData = JSON.parse(exerciseDataJsonString)
     for(let i=0; i<exerciseData.length; i++){
         
         var dateSpaced = exerciseData[i]["date"];

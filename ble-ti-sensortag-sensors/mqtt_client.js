@@ -169,7 +169,7 @@ function sendSensorData(sensorData)
     console.log(sensorData)
     sensorDataString =JSON.stringify(sensorData)
     message = new Paho.MQTT.Message(sensorDataString);
-    message.destinationName = "cs3237/predict"
+    message.destinationName = "cs3237/sensorData"
     mqtt.send(message);
 }
 
@@ -293,7 +293,7 @@ function updateDatabase(){
 
     var obj = JSON.stringify(dbData)
     console.log(obj)
-    return obj
+    return dbData
 
     
 }
@@ -303,6 +303,59 @@ function removeItem(itemName){
     var ul = document.getElementById("dynamic-list");
     var item = document.getElementById(itemName);
     ul.removeChild(itemName);
+}
+
+
+function sendHttpReqForExerciseData(userId) {
+    console.log(userId)
+    var url = "http://j7TPsoTxU5fLSBsnZqIZXA.mywire.org:52995/retrieve?user_id=" + userId;
+    var xhr = new XMLHttpRequest();
+    xhr.open("GET", url);
+    xhr.responseType = 'json';
+    xhr.setRequestHeader("Authorization", "fcaf6094fbbd3e541e446f6c16a62ae6");
+
+    xhr.onreadystatechange = function () {
+    if (xhr.readyState === 4) {
+        console.log("received")
+        console.log(xhr.status);
+        console.log(xhr.response)
+        try{
+            setHistoryList(xhr.response)
+        } catch(err){
+            console.log(err)
+        }
+        try{
+            setCharts(xhr.response)
+        } catch(err){
+            console.log(err)
+        }
+    }};
+
+    xhr.send();
+    console.log("sent")
+}
+
+function sendHttpPostRequestToDb(data){
+
+    var url = "http://j7TPsoTxU5fLSBsnZqIZXA.mywire.org:52995/upload";
+    var xhr = new XMLHttpRequest();
+    xhr.open("POST", url);
+
+    xhr.setRequestHeader("Content-Type", "application/json");
+    xhr.setRequestHeader("Authorization", "fcaf6094fbbd3e541e446f6c16a62ae6");
+
+    xhr.onreadystatechange = function () {
+    if (xhr.readyState === 4) {
+        console.log("here")
+        console.log(xhr.status);
+        console.log(xhr.responseText);
+    }};
+
+    data = {"user_id": "OwenChew", "date": "16/11/2021, 5:09:07 PM", "benchPress": {"0": ["90", "5"], "1": ["30", "5"]}, "squat": {"0": ["30", "5"], "1": ["30", "5"]}, "deadlift": {"0": ["30", "5"], "1": ["30", "4"]}}
+    dataString = JSON.stringify(data);
+    xhr.send(dataString);
+    console.log("sent post request");
+
 }
 
 

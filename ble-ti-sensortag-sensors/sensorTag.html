@@ -207,7 +207,8 @@
 
 	function stopExerciseAndUpdateDatabase(){
 		reset();
-		sendExerciseDataToDB(updateDatabase())
+		sendHttpPostRequestToDb(updateDatabase())
+		// sendExerciseDataToDB(updateDatabase())
 		// sendSensorData(updateDatabase())
 		// updateDatabase();		
 	}
@@ -264,13 +265,13 @@
 			.statusCallback(statusHandler)
 			.errorCallback(errorHandler)
 			.keypressCallback(keypressHandler)
-			.temperatureCallback(temperatureHandler, 1000)
-			.humidityCallback(humidityHandler, 1000)
-			.barometerCallback(barometerHandler, 1000)
+			// .temperatureCallback(temperatureHandler, 1000)
+			// .humidityCallback(humidityHandler, 1000)
+			// .barometerCallback(barometerHandler, 1000)
 			.accelerometerCallback(accelerometerHandler, 100)
-			.magnetometerCallback(magnetometerHandler, 1000)
+			// .magnetometerCallback(magnetometerHandler, 1000)
 			.gyroscopeCallback(gyroscopeHandler, 100)
-			.luxometerCallback(luxometerHandler, 1000)
+			// .luxometerCallback(luxometerHandler, 1000)
 	}
 
 	function connect()
