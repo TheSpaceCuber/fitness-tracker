@@ -110,6 +110,8 @@
 	  
 	  <button onclick="startStop()" id="startExerciseButton">Start Exercise</button>
 	  <button onclick="stopExerciseAndUpdateDatabase()">Stop Exercise</button>
+	  <button onclick="makeNextSet()">Rest</button>
+
 
 	<form>
 		<label for="weightsField">Enter current weight</label><br>
@@ -132,7 +134,7 @@
 	
 
 	<ul id="squat">
-		Squats
+		Rows
 		<ol id="dynamic_squat" style="padding-bottom: 0; font-size: 15px;"> </ol>
 	</ul>
 
@@ -581,7 +583,7 @@
 
 	document.addEventListener(
 		'deviceready',
-		function() { evothings.scriptsLoaded(initialiseSensorTag); MQTTconnect() },
+		function() { evothings.scriptsLoaded(initialiseSensorTag); MQTTconnect(user) },
 		false)
 	</script>
 

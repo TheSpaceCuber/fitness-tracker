@@ -65,6 +65,7 @@
 
 <script>
 
+var globalID= 0;
 
 function isEmpty(obj) {
     for(var key in obj) {
@@ -148,7 +149,10 @@ function setHistoryList(exerciseData)
         closeSpan.className = "close";
         closeSpan.innerHTML = "&times;"
         closeSpan.setAttribute("data-dismiss","modal")
-        
+
+
+
+
         var modalTitle = document.createElement("h4");
         modalTitle.class = "modal-title";
         modalTitle.innerHTML = date;
@@ -161,21 +165,51 @@ function setHistoryList(exerciseData)
         var button = document.createElement("button");
         button.type = "button";
         button.className = "btn btn-success openBtn";
-        button.setAttribute("id", "modalButton"+i)
+        button.setAttribute("id", "modalButton"+ i)
         button.innerHTML = date;
         button.value = date;
 
         var modalFooter = document.createElement("div");
         modalFooter.className = "modal-footer";
+
+        
+      
+        
+        var list = document.getElementById("historyList");
         
         var listItem = document.createElement("li");
-        var list = document.getElementById("historyList");
+        listItem.setAttribute("id", "historyListItem" + i);
+        
+
+        var deleteButton = document.createElement("button");
+        deleteButton.type = "button";
+        deleteButton.className = "btn";
+        deleteButton.innerHTML = "Delete";
+        deleteButton.addEventListener("click", function myFunction(e) {
+            // if (confirm("Are you sure?")) {
+                var nodes = Array.from(list.children);
+                $("#modalFade"+(globalID)).modal('hide');
+                var listItem = document.getElementById("historyListItem" + globalID);
+                var index = nodes.indexOf(listItem);
+                console.log("index of element is" + index);
+
+                listItem.parentNode.removeChild(listItem)
+                console.log("user is " + user);
+                sendHttpDeleteRequestToDb(user, index);
+              
+            // } else {
+
+            // }
+        })
     
         modalHeader.appendChild(modalTitle);
         modalHeader.appendChild(closeSpan);
+
         modalContent.appendChild(modalHeader);
         modalContent.appendChild(modalBody);
         modalContent.appendChild(modalFooter);
+        modalFooter.appendChild(deleteButton);
+
         modalDialog.appendChild(modalContent);
         modalFade.appendChild(modalDialog);
         listItem.appendChild(button);
@@ -184,10 +218,19 @@ function setHistoryList(exerciseData)
         
         $("#modalButton"+i).click(function(){
                     $("#modalFade"+i).modal('show');
+                    globalID = i
+                    console.log("globalid is " +globalID)
+                    var list = document.getElementById("historyList");
+                    console.log(list.childNodes[globalID])
                 });
     }
 }
 
+
+function removeElement(id) {
+    var elem = document.getElementById(id);
+    return elem.parentNode.removeChild(elem);
+}
 	</script>
 
 </body>

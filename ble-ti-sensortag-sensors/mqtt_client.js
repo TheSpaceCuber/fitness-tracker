@@ -19,6 +19,11 @@ var bicepCurlPrevCounter =0;
 var bicepCurlNextCounter=0;
 var bicepCurlCounter=0;
 
+var takenSquatPrevCounter = 0;
+var squatPrevCounter =0;
+var squatNextCounter=0;
+var squatCounter=0;
+
 var sessionID = Math.floor(Math.random() * 100);
 
 var listCOunter =0;
@@ -45,6 +50,7 @@ function onConnect()
     if (userIdGlobal !== ""){
         subscribeToUserQueryReplies(userIdGlobal)
     }
+    subscribeToUserQueryReplies(userIdGlobal)
     mqtt.subscribe("cs3237/prediction/"+sessionID.toString())
     console.log("prediction session id is " + sessionID.toString())
 
@@ -81,17 +87,18 @@ function onMessageArrived(msg)
             console.log(err)
         }
     }
-    // inMessage = msg.payloadString;
-    // console.log(inMessage)
+    // if(msg.destinationName == "exerciseData"){
     if(msg.destinationName == "cs3237/prediction/" + sessionID.toString()) {
         listCounter = listCOunter +1;
     // else {
         inMessage = msg.payloadString;
         exerciseObj = JSON.parse(inMessage)
+        console.log("received smth"); 
+
         exercise = exerciseObj["exercise"]
         count = exerciseObj["count"]
 
-        if (exercise == "bench_press"){
+        if (exercise == "bp"){
             if(takenBenchPressPrevCounter==0) {
                 benchPressPrevCounter = count;
                 takenBenchPressPrevCounter=1;
@@ -103,7 +110,7 @@ function onMessageArrived(msg)
                 takenBenchPressPrevCounter =0;
             }
         }
-        else if (exercise == "bicep_curl") {
+        else if (exercise == "bc") {
             if(takenBicepCurlPrevCounter ==0) {
                 bicepCurlPrevCounter = count;
                 takenBicepCurlPrevCounter =1;
@@ -115,6 +122,20 @@ function onMessageArrived(msg)
                 takenBicepCurlPrevCounter=0;
             }
         }
+        else if (exercise == "row") {
+            if(takenSquatPrevCounter ==0) {
+                squatPrevCounter = count;
+                takenSquatPrevCounter =1;
+            }
+            squatNextCounter = count;
+            if(squatNextCounter > squatPrevCounter) {
+                squatCounter = squatCounter +1
+                addItem("dynamic_squat", "", squatCounter)
+                takenSquatPrevCounter=0;
+            }
+        }
+
+        
 
 
 
@@ -169,7 +190,7 @@ function sendSensorData(sensorData)
     console.log(sensorData)
     sensorDataString =JSON.stringify(sensorData)
     message = new Paho.MQTT.Message(sensorDataString);
-    message.destinationName = "cs3237/sensorData"
+    message.destinationName = "cs3237/predict"
     mqtt.send(message);
 }
 
@@ -207,6 +228,23 @@ function updateExerciseRep(listId, exerciseCtr)
     var reps = inputs[1].value
 
     inputs[1].value = exerciseCtr
+}
+
+function makeNextSet() {
+    takenBenchPressPrevCounter = 0;
+    benchPressPrevCounter =0;
+    benchPressNextCounter =0;
+    benchPressCounter =0;
+    
+    takenBicepCurlPrevCounter = 0;
+    bicepCurlPrevCounter =0;
+    bicepCurlNextCounter=0;
+    bicepCurlCounter=0;
+    
+    takenSquatPrevCounter = 0;
+    squatPrevCounter =0;
+    squatNextCounter=0;
+    squatCounter=0;
 }
 
 
@@ -351,12 +389,28 @@ function sendHttpPostRequestToDb(data){
         console.log(xhr.responseText);
     }};
 
-    data = {"user_id": "OwenChew", "date": "16/11/2021, 5:09:07 PM", "benchPress": {"0": ["90", "5"], "1": ["30", "5"]}, "squat": {"0": ["30", "5"], "1": ["30", "5"]}, "deadlift": {"0": ["30", "5"], "1": ["30", "4"]}}
     dataString = JSON.stringify(data);
     xhr.send(dataString);
     console.log("sent post request");
 
 }
 
+function sendHttpDeleteRequestToDb(userId, index) {
+    var url = "http://j7TPsoTxU5fLSBsnZqIZXA.mywire.org:52995/delete?user_id=" + userId + "&index=" +index;
+
+    var xhr = new XMLHttpRequest();
+    xhr.open("DELETE", url);
+
+    xhr.setRequestHeader("Authorization", "fcaf6094fbbd3e541e446f6c16a62ae6");
+
+    xhr.onreadystatechange = function () {
+    if (xhr.readyState === 4) {
+        console.log(xhr.status);
+        console.log(xhr.responseText);
+    }};
+
+    xhr.send();
+
+}
 
 //------------------MQTT---------------
