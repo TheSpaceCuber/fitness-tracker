@@ -19,6 +19,11 @@ var bicepCurlPrevCounter =0;
 var bicepCurlNextCounter=0;
 var bicepCurlCounter=0;
 
+var takenSquatPrevCounter = 0;
+var squatPrevCounter =0;
+var squatNextCounter=0;
+var squatCounter=0;
+
 var sessionID = Math.floor(Math.random() * 100);
 
 var listCOunter =0;
@@ -45,6 +50,7 @@ function onConnect()
     if (userIdGlobal !== ""){
         subscribeToUserQueryReplies(userIdGlobal)
     }
+    subscribeToUserQueryReplies(userIdGlobal)
     mqtt.subscribe("cs3237/prediction/"+sessionID.toString())
     console.log("prediction session id is " + sessionID.toString())
 
@@ -81,17 +87,18 @@ function onMessageArrived(msg)
             console.log(err)
         }
     }
-    // inMessage = msg.payloadString;
-    // console.log(inMessage)
+    // if(msg.destinationName == "exerciseData"){
     if(msg.destinationName == "cs3237/prediction/" + sessionID.toString()) {
         listCounter = listCOunter +1;
     // else {
         inMessage = msg.payloadString;
         exerciseObj = JSON.parse(inMessage)
+        console.log("received smth"); 
+
         exercise = exerciseObj["exercise"]
         count = exerciseObj["count"]
 
-        if (exercise == "bench_press"){
+        if (exercise == "bp"){
             if(takenBenchPressPrevCounter==0) {
                 benchPressPrevCounter = count;
                 takenBenchPressPrevCounter=1;
@@ -103,7 +110,7 @@ function onMessageArrived(msg)
                 takenBenchPressPrevCounter =0;
             }
         }
-        else if (exercise == "bicep_curl") {
+        else if (exercise == "bc") {
             if(takenBicepCurlPrevCounter ==0) {
                 bicepCurlPrevCounter = count;
                 takenBicepCurlPrevCounter =1;
@@ -115,6 +122,20 @@ function onMessageArrived(msg)
                 takenBicepCurlPrevCounter=0;
             }
         }
+        else if (exercise == "row") {
+            if(takenSquatPrevCounter ==0) {
+                squatPrevCounter = count;
+                takenSquatPrevCounter =1;
+            }
+            squatNextCounter = count;
+            if(squatNextCounter > squatPrevCounter) {
+                squatCounter = squatCounter +1
+                addItem("dynamic_squat", "", squatCounter)
+                takenSquatPrevCounter=0;
+            }
+        }
+
+        
 
 
 
@@ -209,6 +230,23 @@ function updateExerciseRep(listId, exerciseCtr)
     inputs[1].value = exerciseCtr
 }
 
+function makeNextSet() {
+    takenBenchPressPrevCounter = 0;
+    benchPressPrevCounter =0;
+    benchPressNextCounter =0;
+    benchPressCounter =0;
+    
+    takenBicepCurlPrevCounter = 0;
+    bicepCurlPrevCounter =0;
+    bicepCurlNextCounter=0;
+    bicepCurlCounter=0;
+    
+    takenSquatPrevCounter = 0;
+    squatPrevCounter =0;
+    squatNextCounter=0;
+    squatCounter=0;
+}
+
 
 function addItem(list, itemName, exerciseCtr)
 {
@@ -293,7 +331,7 @@ function updateDatabase(){
 
     var obj = JSON.stringify(dbData)
     console.log(obj)
-    return obj
+    return dbData
 
     
 }
@@ -305,5 +343,74 @@ function removeItem(itemName){
     ul.removeChild(itemName);
 }
 
+
+function sendHttpReqForExerciseData(userId) {
+    console.log(userId)
+    var url = "http://j7TPsoTxU5fLSBsnZqIZXA.mywire.org:52995/retrieve?user_id=" + userId;
+    var xhr = new XMLHttpRequest();
+    xhr.open("GET", url);
+    xhr.responseType = 'json';
+    xhr.setRequestHeader("Authorization", "fcaf6094fbbd3e541e446f6c16a62ae6");
+
+    xhr.onreadystatechange = function () {
+    if (xhr.readyState === 4) {
+        console.log("received")
+        console.log(xhr.status);
+        console.log(xhr.response)
+        try{
+            setHistoryList(xhr.response)
+        } catch(err){
+            console.log(err)
+        }
+        try{
+            setCharts(xhr.response)
+        } catch(err){
+            console.log(err)
+        }
+    }};
+
+    xhr.send();
+    console.log("sent")
+}
+
+function sendHttpPostRequestToDb(data){
+
+    var url = "http://j7TPsoTxU5fLSBsnZqIZXA.mywire.org:52995/upload";
+    var xhr = new XMLHttpRequest();
+    xhr.open("POST", url);
+
+    xhr.setRequestHeader("Content-Type", "application/json");
+    xhr.setRequestHeader("Authorization", "fcaf6094fbbd3e541e446f6c16a62ae6");
+
+    xhr.onreadystatechange = function () {
+    if (xhr.readyState === 4) {
+        console.log("here")
+        console.log(xhr.status);
+        console.log(xhr.responseText);
+    }};
+
+    dataString = JSON.stringify(data);
+    xhr.send(dataString);
+    console.log("sent post request");
+
+}
+
+function sendHttpDeleteRequestToDb(userId, index) {
+    var url = "http://j7TPsoTxU5fLSBsnZqIZXA.mywire.org:52995/delete?user_id=" + userId + "&index=" +index;
+
+    var xhr = new XMLHttpRequest();
+    xhr.open("DELETE", url);
+
+    xhr.setRequestHeader("Authorization", "fcaf6094fbbd3e541e446f6c16a62ae6");
+
+    xhr.onreadystatechange = function () {
+    if (xhr.readyState === 4) {
+        console.log(xhr.status);
+        console.log(xhr.responseText);
+    }};
+
+    xhr.send();
+
+}
 
 //------------------MQTT---------------

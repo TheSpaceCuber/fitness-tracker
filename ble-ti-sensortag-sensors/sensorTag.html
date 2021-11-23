@@ -110,6 +110,8 @@
 	  
 	  <button onclick="startStop()" id="startExerciseButton">Start Exercise</button>
 	  <button onclick="stopExerciseAndUpdateDatabase()">Stop Exercise</button>
+	  <button onclick="makeNextSet()">Rest</button>
+
 
 	<form>
 		<label for="weightsField">Enter current weight</label><br>
@@ -132,7 +134,7 @@
 	
 
 	<ul id="squat">
-		Squats
+		Rows
 		<ol id="dynamic_squat" style="padding-bottom: 0; font-size: 15px;"> </ol>
 	</ul>
 
@@ -172,7 +174,8 @@
 
 	function stopExerciseAndUpdateDatabase(){
 		reset();
-		sendExerciseDataToDB(updateDatabase())
+		sendHttpPostRequestToDb(updateDatabase())
+		// sendExerciseDataToDB(updateDatabase())
 		// sendSensorData(updateDatabase())
 		// updateDatabase();		
 	}
@@ -227,13 +230,13 @@
 			.statusCallback(statusHandler)
 			.errorCallback(errorHandler)
 			.keypressCallback(keypressHandler)
-			.temperatureCallback(temperatureHandler, 1000)
-			.humidityCallback(humidityHandler, 1000)
-			.barometerCallback(barometerHandler, 1000)
+			// .temperatureCallback(temperatureHandler, 1000)
+			// .humidityCallback(humidityHandler, 1000)
+			// .barometerCallback(barometerHandler, 1000)
 			.accelerometerCallback(accelerometerHandler, 100)
-			.magnetometerCallback(magnetometerHandler, 1000)
+			// .magnetometerCallback(magnetometerHandler, 1000)
 			.gyroscopeCallback(gyroscopeHandler, 100)
-			.luxometerCallback(luxometerHandler, 1000)
+			// .luxometerCallback(luxometerHandler, 1000)
 	}
 
 	function connect()
@@ -580,7 +583,7 @@
 
 	document.addEventListener(
 		'deviceready',
-		function() { evothings.scriptsLoaded(initialiseSensorTag); MQTTconnect() },
+		function() { evothings.scriptsLoaded(initialiseSensorTag); MQTTconnect(user) },
 		false)
 	</script>
 

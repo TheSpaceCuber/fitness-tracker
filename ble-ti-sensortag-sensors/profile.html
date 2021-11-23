@@ -40,7 +40,7 @@
         const params = new URLSearchParams(window.location.search)
 		var user = params.get('userId')
         console.log("window parameters are "+ user)
-        MQTTconnect(user);
+        sendHttpReqForExerciseData(user);
     </script>
 </head>
 
@@ -68,10 +68,10 @@
 
 
 
-function setCharts(exerciseDataJsonString){
+function setCharts(exerciseList){
 	console.log("setting charts")
-	console.log(exerciseDataJsonString)
-	exerciseList = JSON.parse(exerciseDataJsonString)
+	// console.log(exerciseDataJsonString)
+	// exerciseList = JSON.parse(exerciseDataJsonString)
 
 	var xValuesBenchPress = []
 	var yValuesBenchPress = []
